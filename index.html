@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <title>Breakout Igra</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="script.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        canvas { border: 1px solid black; background-color: #f0f0f0; }
+        .info { display: flex; justify-content: center; gap: 20px; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+    <div class="info">
+        <p>Čas: <mark id="cas">00:00</mark></p>
+        <p>Točke: <mark id="tocke">0</mark></p>
+    </div>
+
+    <canvas id="canvas" width="300" height="300"></canvas>
+
+</body>
+</html>
