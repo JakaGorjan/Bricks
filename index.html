@@ -1,24 +1,37 @@
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-    <meta charset="UTF-8">
-    <title>Breakout Igra</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="script.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        canvas { border: 1px solid black; background-color: #f0f0f0; }
-        .info { display: flex; justify-content: center; gap: 20px; font-size: 18px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Breakout</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
 </head>
 <body>
-
-    <div class="info">
-        <p>Čas: <mark id="cas">00:00</mark></p>
-        <p>Točke: <mark id="tocke">0</mark></p>
+  <div class="wrapper">
+    <div class="top-bar">
+      <div>Čas: <mark id="cas">00:00</mark></div>
+      <div>Točke: <mark id="tocke">0</mark></div>
     </div>
 
-    <canvas id="canvas" width="300" height="300"></canvas>
+    <div class="game-container">
+      <canvas id="canvas" width="800" height="500"></canvas>
 
+      <div id="overlay">
+        <h2 id="overlayText">IZBERI LEVEL</h2>
+
+        <div class="level-buttons">
+          <button onclick="setLevel(1)">LEVEL 1</button>
+          <button onclick="setLevel(2)">LEVEL 2</button>
+          <button onclick="setLevel(3)">LEVEL 3</button>
+        </div>
+
+        <div class="main-buttons">
+          <button onclick="startGame()">Start</button>
+          <button onclick="restartGame()">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

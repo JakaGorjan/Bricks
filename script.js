@@ -1,194 +1,400 @@
-// --- SPREMENLJIVKE ---
-var ctx, canvas, intervalId, timerIntervalId;
+// canvas in risanje
+var ctx;
+var canvas;
+
+// velikost igralnega polja
 var WIDTH = 300;
 var HEIGHT = 300;
 
-// Žogica
-var x = 150, y = 150;
-var dx = 2, dy = 4;
+// žogica: položaj, hitrost, radij
+var x = 150;
+var y = 150;
+var dx = 2;
+var dy = 4;
 var r = 10;
 
-// Plošček (paddle)
-var paddlex, paddleh, paddlew;
+// ploščica
+var paddlex;
+var paddleh;
+var paddlew;
+
+// tipke za premikanje ploščice
 var rightDown = false;
 var leftDown = false;
 
-// Opeke (bricks)
+// opeke
 var bricks;
 var NROWS = 5;
-var NCOLS = 5;
-var BRICKWIDTH, BRICKHEIGHT, PADDING;
-var rowcolors = ["#FF1C0A", "#FFFD0A", "#00A308", "#0008DB", "#EB0093"];
+var NCOLS = 10;
+var BRICKWIDTH;
+var BRICKHEIGHT;
+var PADDING;
 
-// Igra (status, točke, čas)
+// barve elementov
+var paddlecolor = "#000000";
+var ballcolor = "#666666";
+
+// točke, čas in stanje igre
 var tocke = 0;
-var start = true;
 var sekunde = 0;
 var izpisTimer = "00:00";
+var intervalId = null;
+var timerIntervalId = null;
+var start = false;
+var gameStarted = false;
 
+// težavnost / level
+var currentLevel = 1;
+var selectedLevel = false;
 
-// --- INICIALIZACIJA ---
+// slike za bricke
+var brickImages = [];
+
+brickImages[1] = new Image();
+brickImages[1].src = "img/img1.png";
+
+brickImages[2] = new Image();
+brickImages[2].src = "img/img2.png";
+
+brickImages[3] = new Image();
+brickImages[3].src = "img/img3.png";
+
+brickImages[4] = new Image();
+brickImages[4].src = "img/img4.png";
+
+brickImages[5] = new Image();
+brickImages[5].src = "img/img5.png";
+
+// slika tal
+var floorImg = new Image();
+floorImg.src = "img/floor.png";
+
+// glavna inicializacija igre
 function init() {
-    ctx = $('#canvas')[0].getContext("2d");
-   
-    init_paddle();
-    initbricks();
-   
-    tocke = 0;
-    $("#tocke").html(tocke);
-   
-    sekunde = 0;
-    $("#cas").html(izpisTimer);
-   
-    // Zagon glavne zanke in časovnika
-    intervalId = setInterval(draw, 10);
-    timerIntervalId = setInterval(posodobiCas, 1000);
+  canvas = document.getElementById("canvas");
+  ctx = canvas.getContext("2d");
+
+  WIDTH = canvas.width;
+  HEIGHT = canvas.height;
+
+  initLevel();
+  resetBall();
+
+  document.addEventListener("keydown", onKeyDown);
+  document.addEventListener("keyup", onKeyUp);
+
+  document.getElementById("tocke").textContent = tocke;
+  document.getElementById("cas").textContent = izpisTimer;
+
+  draw();
 }
 
+// nastavi težavnost / level
+function initLevel() {
+  if (currentLevel === 1) {
+    NROWS = 5;
+    NCOLS = 10;
+    paddlew = 110;
+  } else if (currentLevel === 2) {
+    NROWS = 10;
+    NCOLS = 15;
+    paddlew = 90;
+  } else if (currentLevel === 3) {
+    NROWS = 10;
+    NCOLS = 20;
+    paddlew = 70;
+  }
+
+  paddleh = 10;
+  paddlex = WIDTH / 2 - paddlew / 2;
+
+  initbricks();
+}
+
+// inicializacija ploščice
 function init_paddle() {
-    paddleh = 10;
-    paddlew = 75;
-    paddlex = (WIDTH / 2) - (paddlew / 2);
+  paddleh = 10;
+  paddlex = WIDTH / 2 - paddlew / 2;
 }
 
+// inicializacija tabele opek
 function initbricks() {
-    BRICKWIDTH = (WIDTH / NCOLS) - 1;
-    BRICKHEIGHT = 15;
-    PADDING = 1;
-    bricks = new Array(NROWS);
-    for (var i = 0; i < NROWS; i++) {
-        bricks[i] = new Array(NCOLS);
-        for (var j = 0; j < NCOLS; j++) {
-            bricks[i][j] = 1; // 1 pomeni, da opeka obstaja
-        }
+  BRICKWIDTH = (WIDTH / NCOLS) - 2;
+  BRICKHEIGHT = 20;
+  PADDING = 2;
+
+  bricks = new Array(NROWS);
+
+  for (var i = 0; i < NROWS; i++) {
+    bricks[i] = new Array(NCOLS);
+
+    for (var j = 0; j < NCOLS; j++) {
+      if (currentLevel === 1) {
+        bricks[i][j] = 5 - i;
+      } else {
+        bricks[i][j] = 5 - Math.floor(i / 2);
+      }
     }
+  }
 }
 
+// ponastavitev žogice
+function resetBall() {
+  x = WIDTH / 2;
+  y = HEIGHT / 2;
 
-// --- POMOŽNE FUNKCIJE ZA RISANJE ---
+  if (currentLevel === 1) {
+    dx = 2;
+    dy = 4;
+  } else if (currentLevel === 2) {
+    dx = 2.5;
+    dy = 4.5;
+  } else if (currentLevel === 3) {
+    dx = 3;
+    dy = 5;
+  }
+}
+
+// risanje kroga
 function circle(x, y, r) {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2, true);
+  ctx.closePath();
+  ctx.fill();
 }
 
+// risanje pravokotnika
 function rect(x, y, w, h) {
-    ctx.beginPath();
-    ctx.rect(x, y, w, h);
-    ctx.closePath();
-    ctx.fill();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.closePath();
+  ctx.fill();
 }
 
+// brisanje canvasa
 function clear() {
-    ctx.clearRect(0, 0, WIDTH, HEIGHT);
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
 }
 
-
-// --- KONTROLE (Tipkovnica) ---
+// pritisk tipke
 function onKeyDown(evt) {
-    if (evt.keyCode == 39) rightDown = true;
-    else if (evt.keyCode == 37) leftDown = true;
+  if (evt.keyCode === 39) {
+    rightDown = true;
+  } else if (evt.keyCode === 37) {
+    leftDown = true;
+  }
 }
 
+// spust tipke
 function onKeyUp(evt) {
-    if (evt.keyCode == 39) rightDown = false;
-    else if (evt.keyCode == 37) leftDown = false;
+  if (evt.keyCode === 39) {
+    rightDown = false;
+  } else if (evt.keyCode === 37) {
+    leftDown = false;
+  }
 }
 
-$(document).keydown(onKeyDown);
-$(document).keyup(onKeyUp);
-
-
-// --- ČASOVNIK ---
-function posodobiCas() {
-    if (start == true) {
-        sekunde++;
-        var sekundeI = sekunde % 60;
-        var minuteI = Math.floor(sekunde / 60);
-       
-        sekundeI = (sekundeI > 9) ? sekundeI : "0" + sekundeI;
-        minuteI = (minuteI > 9) ? minuteI : "0" + minuteI;
-       
-        izpisTimer = minuteI + ":" + sekundeI;
-        $("#cas").html(izpisTimer);
-    }
+// prikaz overlay besedila
+function showOverlay(text) {
+  document.getElementById("overlay").style.display = "flex";
+  document.getElementById("overlayText").textContent = text;
 }
 
+// skrij overlay
+function hideOverlay() {
+  document.getElementById("overlay").style.display = "none";
+}
 
-// --- GLAVNA ZANKA (Draw) ---
+// izbira levela z gumbom
+function setLevel(level) {
+  clearInterval(intervalId);
+  clearInterval(timerIntervalId);
+
+  intervalId = null;
+  timerIntervalId = null;
+
+  currentLevel = level;
+  selectedLevel = true;
+  gameStarted = false;
+  start = false;
+
+  tocke = 0;
+  sekunde = 0;
+  izpisTimer = "00:00";
+
+  initLevel();
+  init_paddle();
+  resetBall();
+
+  document.getElementById("tocke").textContent = tocke;
+  document.getElementById("cas").textContent = izpisTimer;
+
+  showOverlay("LEVEL " + currentLevel);
+  draw();
+}
+
+// zagon igre
+function startGame() {
+  if (!selectedLevel) {
+    showOverlay("NAJPREJ IZBERI LEVEL");
+    return;
+  }
+
+  if (gameStarted) {
+    return;
+  }
+
+  hideOverlay();
+
+  start = true;
+  gameStarted = true;
+
+  intervalId = setInterval(draw, 10);
+  timerIntervalId = setInterval(timer, 1000);
+}
+
+// ponovni začetek igre
+function restartGame() {
+  clearInterval(intervalId);
+  clearInterval(timerIntervalId);
+
+  intervalId = null;
+  timerIntervalId = null;
+
+  tocke = 0;
+  sekunde = 0;
+  izpisTimer = "00:00";
+  start = true;
+  gameStarted = true;
+
+  initLevel();
+  init_paddle();
+  resetBall();
+
+  document.getElementById("tocke").textContent = tocke;
+  document.getElementById("cas").textContent = izpisTimer;
+
+  hideOverlay();
+
+  intervalId = setInterval(draw, 10);
+  timerIntervalId = setInterval(timer, 1000);
+}
+
+// timer za prikaz časa igre
+function timer() {
+  if (start === true) {
+    sekunde++;
+
+    var sekundeI = sekunde % 60;
+    var minuteI = Math.floor(sekunde / 60);
+
+    sekundeI = sekundeI > 9 ? sekundeI : "0" + sekundeI;
+    minuteI = minuteI > 9 ? minuteI : "0" + minuteI;
+
+    izpisTimer = minuteI + ":" + sekundeI;
+    document.getElementById("cas").textContent = izpisTimer;
+  }
+}
+
+// skupno število brickov v levelu
+function getTotalBricksForLevel() {
+  return NROWS * NCOLS;
+}
+
+// glavna funkcija igre
 function draw() {
-    clear();
-   
-    // 1. Premik ploščka
-    if (rightDown) {
-        if ((paddlex + paddlew) < WIDTH) paddlex += 5;
-        else paddlex = WIDTH - paddlew;
-    } else if (leftDown) {
-        if (paddlex > 0) paddlex -= 5;
-        else paddlex = 0;
-    }
-   
-    // Risanje ploščka in žogice
-    ctx.fillStyle = "#000000";
-    rect(paddlex, HEIGHT - paddleh, paddlew, paddleh);
-    ctx.fillStyle = "#333333";
-    circle(x, y, r);
+  clear();
 
-    // 2. Risanje opek in detekcija trka žogice z opeko
-    for (var i = 0; i < NROWS; i++) {
-        ctx.fillStyle = rowcolors[i];
-        for (var j = 0; j < NCOLS; j++) {
-            if (bricks[i][j] == 1) {
-                var brickX = (j * (BRICKWIDTH + PADDING)) + PADDING;
-                var brickY = (i * (BRICKHEIGHT + PADDING)) + PADDING;
-                rect(brickX, brickY, BRICKWIDTH, BRICKHEIGHT);
-               
-                // Trk z opeko
-                var rowheight = BRICKHEIGHT + PADDING;
-                var colwidth = BRICKWIDTH + PADDING;
-                var row = Math.floor(y / rowheight);
-                var col = Math.floor(x / colwidth);
-               
-                if (y < NROWS * rowheight && row >= 0 && col >= 0 && bricks[row][col] == 1) {
-                    dy = -dy;
-                    bricks[row][col] = 0; // Uniči opeko
-                    tocke += 1; // Dodaj točko
-                    $("#tocke").html(tocke);
-                }
-            }
-        }
-    }
+  // tla spodaj
+  ctx.drawImage(floorImg, 0, HEIGHT - 60, WIDTH, 60);
 
-    // 3. Odboji od sten
-    if (x + dx > WIDTH - r || x + dx < r) {
-        dx = -dx;
-    }
-    if (y + dy < r) {
-        dy = -dy;
-    }
-    // Trk ob dno (ali plošček)
-    else if (y + dy > HEIGHT - r - paddleh) {
-        if (x > paddlex && x < paddlex + paddlew) {
-            // Dinamičen odboj glede na to, kje na plošček prileti žogica
-            dx = 8 * ((x - (paddlex + paddlew / 2)) / paddlew);
-            dy = -dy;
-            start = true; // Znova zaženi časovnik, če je bil ustavljen
-        } else if (y + dy > HEIGHT - r) {
-            // Konec igre (žogica pade mimo ploščka)
-            start = false;
-            clearInterval(intervalId);
-            clearInterval(timerIntervalId);
-            alert("Konec igre! Zbral/a si " + tocke + " točk.");
-        }
-    }
+  // vidna odbojna linija
+  ctx.beginPath();
+  ctx.moveTo(0, HEIGHT - paddleh);
+  ctx.lineTo(WIDTH, HEIGHT - paddleh);
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 2;
+  ctx.stroke();
 
-    // 4. Posodobitev koordinat žogice
-    x += dx;
-    y += dy;
+  if (rightDown) {
+    if (paddlex + paddlew < WIDTH) {
+      paddlex += 5;
+    } else {
+      paddlex = WIDTH - paddlew;
+    }
+  } else if (leftDown) {
+    if (paddlex > 0) {
+      paddlex -= 5;
+    } else {
+      paddlex = 0;
+    }
+  }
+
+  for (var i = 0; i < NROWS; i++) {
+    for (var j = 0; j < NCOLS; j++) {
+      if (bricks[i][j] > 0) {
+        ctx.drawImage(
+          brickImages[bricks[i][j]],
+          (j * (BRICKWIDTH + PADDING)) + PADDING,
+          (i * (BRICKHEIGHT + PADDING)) + PADDING,
+          BRICKWIDTH,
+          BRICKHEIGHT
+        );
+      }
+    }
+  }
+
+  ctx.fillStyle = paddlecolor;
+  rect(paddlex, HEIGHT - paddleh, paddlew, paddleh);
+
+  ctx.fillStyle = ballcolor;
+  circle(x, y, r);
+
+  var rowheight = BRICKHEIGHT + PADDING;
+  var colwidth = BRICKWIDTH + PADDING;
+  var row = Math.floor(y / rowheight);
+  var col = Math.floor(x / colwidth);
+
+  if (y < NROWS * rowheight && row >= 0 && row < NROWS && col >= 0 && col < NCOLS && bricks[row][col] > 0) {
+    dy = -dy;
+    bricks[row][col]--;
+
+    if (bricks[row][col] === 0) {
+      tocke += 1;
+      document.getElementById("tocke").textContent = tocke;
+    }
+  }
+
+  if (x + dx > WIDTH - r || x + dx < r) {
+    dx = -dx;
+  }
+
+  if (y + dy < r) {
+    dy = -dy;
+  } else if (y + dy > HEIGHT - r - paddleh) {
+    if (x > paddlex && x < paddlex + paddlew) {
+      dx = 8 * ((x - (paddlex + paddlew / 2)) / paddlew);
+      dy = -dy;
+    } else if (y + dy > HEIGHT - r) {
+      start = false;
+      gameStarted = false;
+      clearInterval(intervalId);
+      clearInterval(timerIntervalId);
+      showOverlay("KONEC IGRE - Točke: " + tocke);
+    }
+  }
+
+  x += dx;
+  y += dy;
+
+  if (tocke === getTotalBricksForLevel()) {
+    start = false;
+    gameStarted = false;
+    clearInterval(intervalId);
+    clearInterval(timerIntervalId);
+    showOverlay("ZMAGA - LEVEL " + currentLevel);
+  }
 }
 
-// Poženi igro, ko je dokument pripravljen
-$(document).ready(function() {
-    init();
-});
+// zagon priprave ob nalaganju strani
+window.onload = init;
