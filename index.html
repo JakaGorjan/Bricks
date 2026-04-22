@@ -8,30 +8,30 @@
   <script src="script.js" defer></script>
 </head>
 <body>
-  <div class="wrapper">
-    <div class="top-bar">
-      <div>Čas: <mark id="cas">00:00</mark></div>
-      <div>Točke: <mark id="tocke">0</mark></div>
-    </div>
 
-    <div class="game-container">
-      <canvas id="canvas" width="800" height="500"></canvas>
+  <div class="top-bar">
+    <div>Čas: <mark id="cas">00:00</mark></div>
+    <div>Točke: <mark id="tocke">0</mark></div>
+  </div>
 
-      <div id="overlay">
-        <h2 id="overlayText">IZBERI LEVEL</h2>
+  <div class="game-frame">
+    <canvas id="canvas" width="1320" height="480"></canvas>
 
-        <div class="level-buttons">
-          <button onclick="setLevel(1)">LEVEL 1</button>
-          <button onclick="setLevel(2)">LEVEL 2</button>
-          <button onclick="setLevel(3)">LEVEL 3</button>
-        </div>
+    <div id="overlay">
+      <h2 id="overlayText">IZBERI LEVEL</h2>
 
-        <div class="main-buttons">
-          <button onclick="startGame()">Start</button>
-          <button onclick="restartGame()">Restart</button>
-        </div>
+      <div class="level-buttons">
+        <button onclick="setLevel(1)">LEVEL 1</button>
+        <button onclick="setLevel(2)">LEVEL 2</button>
+        <button onclick="setLevel(3)">LEVEL 3</button>
+      </div>
+
+      <div class="main-buttons">
+        <button onclick="startGame()">Start</button>
+        <button onclick="restartGame()">Restart</button>
       </div>
     </div>
   </div>
+
 </body>
 </html>

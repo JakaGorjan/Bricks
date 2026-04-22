@@ -30,6 +30,9 @@ var BRICKWIDTH;
 var BRICKHEIGHT;
 var PADDING;
 
+// bricki čisto na vrhu
+var brickOffsetY = 0;
+
 // barve elementov
 var paddlecolor = "#000000";
 var ballcolor = "#666666";
@@ -64,10 +67,6 @@ brickImages[4].src = "img/img4.png";
 
 brickImages[5] = new Image();
 brickImages[5].src = "img/img5.png";
-
-// slika tal
-var floorImg = new Image();
-floorImg.src = "img/floor.png";
 
 // glavna inicializacija igre
 function init() {
@@ -305,17 +304,6 @@ function getTotalBricksForLevel() {
 function draw() {
   clear();
 
-  // tla spodaj
-  ctx.drawImage(floorImg, 0, HEIGHT - 60, WIDTH, 60);
-
-  // vidna odbojna linija
-  ctx.beginPath();
-  ctx.moveTo(0, HEIGHT - paddleh);
-  ctx.lineTo(WIDTH, HEIGHT - paddleh);
-  ctx.strokeStyle = "white";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
   if (rightDown) {
     if (paddlex + paddlew < WIDTH) {
       paddlex += 5;
@@ -336,7 +324,7 @@ function draw() {
         ctx.drawImage(
           brickImages[bricks[i][j]],
           (j * (BRICKWIDTH + PADDING)) + PADDING,
-          (i * (BRICKHEIGHT + PADDING)) + PADDING,
+          (i * (BRICKHEIGHT + PADDING)) + brickOffsetY,
           BRICKWIDTH,
           BRICKHEIGHT
         );
@@ -352,10 +340,18 @@ function draw() {
 
   var rowheight = BRICKHEIGHT + PADDING;
   var colwidth = BRICKWIDTH + PADDING;
-  var row = Math.floor(y / rowheight);
+  var row = Math.floor((y - brickOffsetY) / rowheight);
   var col = Math.floor(x / colwidth);
 
-  if (y < NROWS * rowheight && row >= 0 && row < NROWS && col >= 0 && col < NCOLS && bricks[row][col] > 0) {
+  if (
+    y >= brickOffsetY &&
+    y < brickOffsetY + NROWS * rowheight &&
+    row >= 0 &&
+    row < NROWS &&
+    col >= 0 &&
+    col < NCOLS &&
+    bricks[row][col] > 0
+  ) {
     dy = -dy;
     bricks[row][col]--;
 
